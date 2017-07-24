@@ -28,10 +28,16 @@ public final class Sender {
     }
     
     private void processDirection(Direction direction) {
-        if (direction == null) {
+        if (direction == null || !direction.isActive()) {
             return;
         }
-        // check path existance
+        
+        // check path existance and path is dir
+        File path = direction.getPath();
+        if (path == null || !path.exists() || path.isFile()) {
+            return;
+        }
+                
         // get all files by extinsion
         // send all files over email
         // delete sent files

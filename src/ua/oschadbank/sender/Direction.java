@@ -19,4 +19,12 @@ public class Direction {
     public String getMask() {
         return mask;
     }
+    
+    public File getPath() {
+        return path;
+    }
+    
+    public boolean isActive() {
+        return active;
+    }
 }
