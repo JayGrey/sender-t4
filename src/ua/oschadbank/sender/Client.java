@@ -1,9 +1,11 @@
 package ua.oschadbank.sender;
 
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Client {
+
+public class Client implements Serializable {
     private String name;
     private boolean active;
     private List<Direction> directions;

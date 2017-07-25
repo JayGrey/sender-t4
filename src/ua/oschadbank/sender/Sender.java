@@ -1,10 +1,24 @@
 package ua.oschadbank.sender;
 
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Properties;
 import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+
+class Filter implements FilenameFilter {
+    private String mask;
+    
+    Filter(String mask) {
+        this.mask = mask;
+    }
+    
+    public boolean accept(File dir, String name) {
+        return name.endsWith(mask);
+    }
+}
 
 public final class Sender {
     
@@ -33,14 +47,24 @@ public final class Sender {
         }
         
         // check path existance and path is dir
-        File path = direction.getPath();
-        if (path == null || !path.exists() || path.isFile()) {
+        if (direction.path == null || !direction.path.exists() || direction.path.isFile()) {
             return;
         }
                 
         // get all files by extinsion
+        File[] files = direction.path.listFiles(new Filter(direction.mask));
+        if (files.length == 0) {
+            return;
+        }
+        
         // send all files over email
-        // delete sent files
+        SMTPServer smtp = SMTPServer.getInstance();        
+        if ( smtp.send(direction.subject, direction.email, files) ) {            
+            // delete sent files
+            for (File file : files) {
+                file.delete();
+            }
+        }
     }
     
     private void start() {

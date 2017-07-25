@@ -1,16 +1,18 @@
 package ua.oschadbank.sender;
 
 import java.io.File;
+import java.io.Serializable;
 
-public class Direction {        
-    private File path;
-    private String mask;
-    private String[] email;
-    private String subject;
-    private boolean active;
+public class Direction implements Serializable {
+    File path;
+    String mask;
+    String[] email;
+    String subject;
+    boolean active;
     
-    Direction(File path, String[] email, String subject, boolean active) {
+    Direction(File path, String mask, String[] email, String subject, boolean active) {
         this.path = path;
+        this.mask = mask;
         this.email = email;
         this.subject = subject;
         this.active = active;
