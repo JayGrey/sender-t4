@@ -3,6 +3,11 @@ package ua.oschadbank.sender;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.Reader;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -14,7 +19,7 @@ class Filter implements FilenameFilter {
     Filter(String mask) {
         this.mask = mask;
     }
-    
+
     public boolean accept(File dir, String name) {
         return name.endsWith(mask);
     }
@@ -31,14 +36,42 @@ public final class Sender {
         clients = loadClients(senderSettings.getProperty("client_file", "clients.sqlite"));
     }
     
-    private List<Client> loadClients(String filename) {
+    List<Client> loadClients(String filename) {
         // load clients settings from clients.sqlite
         return new ArrayList<Client>();
     }
     
-    private Properties loadSettings(String filename) {
-        // load main settings from sender.properties
-        return new Properties();
+    void saveClients(List<Client> clients) {
+        
+    }
+    
+    private Properties loadSettings(String filename) {     
+        Properties properties = new Properties();
+        try (Reader reader = new BufferedReader(new FileReader(SENDER_SETTINGS_FILE))) {
+            properties.load(reader);            
+        } catch (FileNotFoundException e) {
+            System.out.format("Settings file %s not found%n", filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        if (properties.getProperty("client_file") == null) {
+            properties.setProperty("client_file", "clients.bin");
+        }
+        
+        if (properties.getProperty("smtp.host") == null) {
+            properties.setProperty("smtp.host", "127.0.0.1");
+        }
+        
+        if (properties.getProperty("smtp.port") == null) {
+            properties.setProperty("smtp.port", "21");
+        }
+        
+        if (properties.getProperty("sleep_time") == null) {
+            properties.setProperty("sleep_time", "5");
+        }
+        
+        return properties;
     }
     
     private void processDirection(Direction direction) {
@@ -79,7 +112,7 @@ public final class Sender {
     }
     
     public static void main(String[] args) {        
-        System.out.println("Sender t4");
+        System.out.println("Sender t4");        
         new Sender().start();
     }
 }
