@@ -10,6 +10,10 @@ public class Direction implements Serializable {
     String subject;
     boolean active;
     
+    Direction(File path, String mask, String[] email, String subject) {
+        this(path, mask, email, subject, true);
+    }
+    
     Direction(File path, String mask, String[] email, String subject, boolean active) {
         this.path = path;
         this.mask = mask;
@@ -28,5 +32,19 @@ public class Direction implements Serializable {
     
     public boolean isActive() {
         return active;
+    }
+    
+    @Override
+    public boolean equals(Object object) {
+        if (object == null) {
+            return false;
+        } else if (object == this) {
+            return true;
+        } else if (object instanceof Direction) {
+            Direction obj = (Direction) object;
+            return path.equals(obj.path) && mask.equals(obj.mask) && email.equals(obj.email) && subject.equals(obj.subject) && active == obj.active;
+        } else {
+            return false;
+        }
     }
 }

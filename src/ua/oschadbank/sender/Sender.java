@@ -6,8 +6,14 @@ import java.io.FilenameFilter;
 import java.io.Reader;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.FileNotFoundException;
+//import java.io.ClassNotFoundException;
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -30,19 +36,43 @@ public final class Sender {
     private List<Client> clients;
     private Properties senderSettings;
     private final String SENDER_SETTINGS_FILE = "sender.properties";
+    private static Sender instance;
     
     private Sender() {
         senderSettings = loadSettings(SENDER_SETTINGS_FILE);
-        clients = loadClients(senderSettings.getProperty("client_file", "clients.sqlite"));
+        clients = loadClients(senderSettings.getProperty("client_file", "clients.bin"));
     }
     
-    List<Client> loadClients(String filename) {
-        // load clients settings from clients.sqlite
-        return new ArrayList<Client>();
-    }
-    
-    void saveClients(List<Client> clients) {
+    static Sender getInstance() {
+        if (instance == null) {
+            instance = new Sender();
+        }
         
+        return instance;
+    }
+    
+    List<Client> loadClients(String filename) {        
+        List<Client> clients = null;
+                
+        try (ObjectInputStream stream = new ObjectInputStream(new FileInputStream(filename))) {
+            clients = (ArrayList<Client>)stream.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return clients;
+    }
+    
+    void saveClients(String filename, List<Client> clients) {
+        if (clients == null || clients.size() == 0) {
+            return;
+        }
+        
+        try (ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(filename))) {
+            stream.writeObject(clients);
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     private Properties loadSettings(String filename) {     
@@ -100,7 +130,7 @@ public final class Sender {
         }
     }
     
-    private void start() {
+    void start() {
         // all goes here
         System.out.println("start processing");
         for (Client client : clients) {
@@ -113,6 +143,6 @@ public final class Sender {
     
     public static void main(String[] args) {        
         System.out.println("Sender t4");        
-        new Sender().start();
+        getInstance().start();
     }
 }

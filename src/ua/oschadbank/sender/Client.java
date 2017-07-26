@@ -2,6 +2,7 @@ package ua.oschadbank.sender;
 
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -10,13 +11,37 @@ public class Client implements Serializable {
     private boolean active;
     private List<Direction> directions;
     
+    Client(String name) {
+        this(name, new ArrayList<Direction>(), true);
+    }
+    
     Client(String name, List<Direction> directions, boolean active) {
         this.name = name;        
         this.directions = directions;
         this.active = active;
     }
     
+    public void addDirection(Direction direction) {
+        if (directions == null || direction == null) {
+            return;
+        }
+        directions.add(direction);
+    }
+    
     public List<Direction> getDirections() {
         return directions;
+    }
+    
+    public boolean isActive() {
+        return active;
+    }
+    
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("Client{name: %s}", name);
     }
 }
