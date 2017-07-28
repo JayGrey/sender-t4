@@ -41,6 +41,20 @@ public class Client implements Serializable {
     }
     
     @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        } else if ( other == this) {
+            return false;
+        } else if (other instanceof Client) {
+            Client client = (Client) other;
+            return client.name.equals(name) && client.active == active && client.directions.equals(directions);
+        } else {
+            return false;
+        }
+    }
+    
+    @Override
     public String toString() {
         return String.format("Client{name: %s}", name);
     }

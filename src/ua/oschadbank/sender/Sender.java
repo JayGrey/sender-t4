@@ -11,7 +11,7 @@ import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.FileNotFoundException;
-//import java.io.ClassNotFoundException;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -60,6 +60,10 @@ public final class Sender {
             e.printStackTrace();
         }
         return clients;
+    }
+    
+    List<Client> importClients(String filename) {
+        return null;
     }
     
     void saveClients(String filename, List<Client> clients) {

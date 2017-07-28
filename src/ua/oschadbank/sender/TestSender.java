@@ -31,6 +31,8 @@ public class TestSender {
         // try to load clients
         List<Client> restoredClients = sender.loadClients("clients.bin");
         System.out.println(restoredClients);
+        
+        System.out.println("Clients are identical? : " + clients.equals(restoredClients));
 
     }
 }
