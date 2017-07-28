@@ -1,2 +1,9 @@
+/.idea/*
+/dist/*
+/lib/*
 /bundle/*
 /build/*
+*.iml
+.gitignore
+*.txt
+*.cmd

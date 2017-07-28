@@ -1,4 +1,4 @@
-package ua.oschadbank.sender;
+package com.darkbytes.sender;
 
 
 import java.io.File;
