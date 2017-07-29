@@ -1,27 +1,18 @@
 package com.darkbytes.sender;
 
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.Reader;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.FileNotFoundException;
-
-import java.io.IOException;
-
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 class Filter implements FilenameFilter {
     private String mask;
-    
+
     Filter(String mask) {
         this.mask = mask;
     }
@@ -32,108 +23,170 @@ class Filter implements FilenameFilter {
 }
 
 public final class Sender {
-    
+
     private List<Client> clients;
     private Properties senderSettings;
     private final String SENDER_SETTINGS_FILE = "sender.properties";
     private static Sender instance;
-    
+    private static Logger logger = Logger.getLogger(Sender.class.getName());
+
     private Sender() {
         senderSettings = loadSettings(SENDER_SETTINGS_FILE);
-        clients = loadClients(senderSettings.getProperty("client_file", "clients.bin"));
+
+        try {
+            clients = importClients(new BufferedReader(new FileReader(senderSettings.getProperty("client_file"))));
+        } catch (FileNotFoundException e) {
+            logger.log(Level.FINE, "Cant find clients file", e);
+        } finally {
+            if (clients == null) {
+                clients = Collections.emptyList();
+            }
+        }
     }
-    
+
     static Sender getInstance() {
         if (instance == null) {
             instance = new Sender();
         }
-        
+
         return instance;
     }
-    
-    List<Client> loadClients(String filename) {        
-        List<Client> clients = null;
-                
-        try (ObjectInputStream stream = new ObjectInputStream(new FileInputStream(filename))) {
-            clients = (ArrayList<Client>)stream.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return clients;
-    }
-    
-    List<Client> importClients(String filename) {
-        return null;
-    }
-    
-    void saveClients(String filename, List<Client> clients) {
-        if (clients == null || clients.size() == 0) {
-            return;
-        }
-        
-        try (ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(filename))) {
-            stream.writeObject(clients);
-            stream.close();
+
+    List<Client> importClients(Reader reader) {
+        final String CLIENT_REGEX = "\\s*[c|C]\\s*\\([^\\(\\)]+\\)\\s*";
+        final String DIRECTION_REGEX = "\\s*[d|D]\\s*\\([^\\(\\)]+\\)\\s*";
+
+        List<Client> result = new ArrayList<>();
+        try (LineNumberReader lineReader = new LineNumberReader(reader)) {
+
+            String line;
+            Client currentClient = null;
+            while ((line = lineReader.readLine()) != null) {
+                line = line.trim();
+                if (line.startsWith("#")) {
+                    continue;
+                }
+
+                if (line.matches(CLIENT_REGEX)) {
+                    if (currentClient != null) {
+                        result.add(currentClient);
+                        currentClient = null;
+                    }
+                    int openParenthesis = line.indexOf('(');
+                    int closeParenthesis = line.indexOf(')');
+                    currentClient = new Client(line.substring(openParenthesis + 1, closeParenthesis).trim());
+
+                } else if (line.matches(DIRECTION_REGEX)) {
+                    // check direction without client
+                    if (currentClient == null) {
+                        logger.log(Level.FINE, "Found direction w/o client at line {0}, skip it",
+                                lineReader.getLineNumber());
+                        continue;
+                    }
+
+                    int openParenthesis = line.indexOf('(');
+                    int closeParenthesis = line.indexOf(')');
+                    String[] elements = line.substring(openParenthesis + 1, closeParenthesis).split("\\|");
+                    if (elements.length != 4) {
+                        logger.log(Level.FINE, "Wrong number of fields in direction, at line {0} ", lineReader.getLineNumber());
+                        continue;
+                    }
+
+                    String path = elements[0].trim();
+                    String mask = elements[1].trim();
+                    String subject = elements[3].trim();
+
+                    // check path
+                    if (path.length() == 0) {
+                        logger.log(Level.FINE, "path missing at line {0}", lineReader.getLineNumber());
+                        continue;
+                    }
+
+                    // check email
+                    List<String> emailList = new ArrayList<>();
+                    for (String email : elements[2].trim().split(";")) {
+                        if (email.trim().length() != 0) {
+                            emailList.add(email.trim());
+                        }
+                    }
+                    if (emailList.size() == 0) {
+                        logger.log(Level.FINE, "email address missing at line {0}", lineReader.getLineNumber());
+                        continue;
+                    }
+
+                    currentClient.addDirection(new Direction(new File(path), mask, emailList.toArray(new String[0]), subject));
+
+                } else {
+                    logger.log(Level.FINE, "error parsing string [{0}] at line {1}",
+                            new Object[]{line, lineReader.getLineNumber()});
+                }
+            }
+
+            if (currentClient != null) {
+                result.add(currentClient);
+            }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.FINE, "error reading clients file", e);
         }
+        return result;
     }
-    
-    private Properties loadSettings(String filename) {     
+
+
+    private Properties loadSettings(String filename) {
         Properties properties = new Properties();
         try (Reader reader = new BufferedReader(new FileReader(SENDER_SETTINGS_FILE))) {
-            properties.load(reader);            
+            properties.load(reader);
         } catch (FileNotFoundException e) {
             System.out.format("Settings file %s not found%n", filename);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         if (properties.getProperty("client_file") == null) {
             properties.setProperty("client_file", "clients.bin");
         }
-        
+
         if (properties.getProperty("smtp.host") == null) {
             properties.setProperty("smtp.host", "127.0.0.1");
         }
-        
+
         if (properties.getProperty("smtp.port") == null) {
             properties.setProperty("smtp.port", "21");
         }
-        
+
         if (properties.getProperty("sleep_time") == null) {
             properties.setProperty("sleep_time", "5");
         }
-        
+
         return properties;
     }
-    
+
     private void processDirection(Direction direction) {
-        if (direction == null || !direction.isActive()) {
+        if (direction == null) {
             return;
         }
-        
+
         // check path existance and path is dir
         if (direction.path == null || !direction.path.exists() || direction.path.isFile()) {
             return;
         }
-                
+
         // get all files by extinsion
         File[] files = direction.path.listFiles(new Filter(direction.mask));
         if (files.length == 0) {
             return;
         }
-        
+
         // send all files over email
-        SMTPServer smtp = SMTPServer.getInstance();        
-        if ( smtp.send(direction.subject, direction.email, files) ) {            
+        SMTPServer smtp = SMTPServer.getInstance();
+        if (smtp.send(direction.subject, direction.email, files)) {
             // delete sent files
             for (File file : files) {
                 file.delete();
             }
         }
     }
-    
+
     void start() {
         // all goes here
         System.out.println("start processing");
@@ -144,9 +197,9 @@ public final class Sender {
         }
         System.out.println("stop processing");
     }
-    
-    public static void main(String[] args) {        
-        System.out.println("Sender t4");        
+
+    public static void main(String[] args) {
+        System.out.println("Sender t4");
         getInstance().start();
     }
 }

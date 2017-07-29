@@ -25,6 +25,7 @@
         description="compile the source">
     <!-- Compile the java code from ${src} into ${build} -->
     <javac srcdir="${src}" destdir="${build}" includeantruntime="false" debug="true" debuglevel="lines,vars,source">
+        <compilerarg value="-Xlint:unchecked"/>
     </javac>
   </target>
 
