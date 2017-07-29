@@ -44,4 +44,16 @@ public class Direction {
             return false;
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder emailBuilder = new StringBuilder();
+        for (int i = 0; i < email.length; i++) {
+            emailBuilder.append(email[i]);
+            if (i != (email.length - 1)) {
+                emailBuilder.append(';');
+            }
+        }
+        return String.format("d (%s | %s | %s | %s)", path, mask, emailBuilder.toString(), subject);
+    }
 }

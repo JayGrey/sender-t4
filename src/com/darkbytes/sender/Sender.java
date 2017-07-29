@@ -131,6 +131,18 @@ public final class Sender {
         return result;
     }
 
+    String exportClients() {
+        StringBuilder result = new StringBuilder();
+        for (Client client : clients) {
+            result.append(client);
+            result.append(System.lineSeparator());
+            for (Direction direction : client.getDirections()) {
+                result.append(direction);
+                result.append(System.lineSeparator());
+            }
+        }
+        return result.toString();
+    }
 
     private Properties loadSettings(String filename) {
         Properties properties = new Properties();
@@ -161,7 +173,11 @@ public final class Sender {
         return properties;
     }
 
-    private void processDirection(Direction direction) {
+    void setSettings(Properties settings) {
+        senderSettings = settings;
+    }
+
+    void processDirection(Direction direction) {
         if (direction == null) {
             return;
         }
@@ -178,12 +194,15 @@ public final class Sender {
         }
 
         // send all files over email
-        SMTPServer smtp = SMTPServer.getInstance();
+        SMTPServer smtp = SMTPServer.getInstance(senderSettings);
         if (smtp.send(direction.subject, direction.email, files)) {
             // delete sent files
             for (File file : files) {
+                logger.log(Level.INFO, String.format("file %s ==> sent to %s", file.getName(), direction.email[0]));
                 file.delete();
             }
+        } else {
+            logger.log(Level.FINE, "Error sendign file via smtp");
         }
     }
 

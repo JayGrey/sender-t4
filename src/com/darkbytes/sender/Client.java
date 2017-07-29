@@ -46,7 +46,7 @@ public class Client {
 
     @Override
     public String toString() {
-        return String.format("Client{name: %s}", name);
+        return String.format("c (%s)", name);
     }
 
     public String getName() {
