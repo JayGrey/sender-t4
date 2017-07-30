@@ -1,75 +1,80 @@
 <project name="sender-t4" default="compile" basedir=".">
-  <description>Sender project t.4</description>
-  <!-- set global properties for this build -->
-  <property name="src" location="src"/>
-  <property name="build" location="build"/>
-  <property name="test.src" location="test"/>
-  <property name="test.build" location="build/test"/>
-  <property name="dist" location="dist"/>
+    <description>Sender project t.4</description>
+    <!-- set global properties for this build -->
+    <property name="src" location="src"/>
+    <property name="build" location="build"/>
+    <property name="test.src" location="test"/>
+    <property name="test.build" location="build/test"/>
+    <property name="dist" location="dist"/>
 
-  <path id="classpath.test">
-    <pathelement location="lib/junit-4.12.jar" />
-    <pathelement location="lib/hamcrest-core-1.3.jar" />
-    <pathelement location="${build}" />
-  </path>
+    <path id="classpath.test">
+        <pathelement location="lib/junit-4.12.jar"/>
+        <pathelement location="lib/hamcrest-core-1.3.jar"/>
+        <pathelement location="lib/javax.mail-1.6.0.jar"/>
+        <pathelement location="${build}"/>
+    </path>
 
-  <target name="init">
-    <!-- Create the time stamp -->
-    <tstamp/>
-    <!-- Create the build directory structure used by compile -->
-    <mkdir dir="${build}"/>
-    <mkdir dir="${test.build}"/>
-  </target>
+    <target name="init">
+        <!-- Create the time stamp -->
+        <tstamp/>
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${build}"/>
+        <mkdir dir="${test.build}"/>
+    </target>
 
-  <target name="compile" depends="init"
-        description="compile the source">
-    <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}" includeantruntime="false" debug="true" debuglevel="lines,vars,source">
-        <compilerarg value="-Xlint:unchecked"/>
-    </javac>
-  </target>
+    <target name="compile" depends="init"
+            description="compile the source">
+        <!-- Compile the java code from ${src} into ${build} -->
+        <javac srcdir="${src}" destdir="${build}" includeantruntime="false" debug="true" debuglevel="lines,vars,source">
+            <compilerarg value="-Xlint:unchecked"/>
+            <classpath>
+                <path refid="classpath.test"/>
+                <pathelement location="${build}"/>
+            </classpath>
+        </javac>
+    </target>
 
-  <target name="test-compile" depends="compile">
-    <javac srcdir="${test.src}" destdir="${test.build}" includeantruntime="false">
-      <classpath refid="classpath.test"/>
-    </javac>
-  </target>
+    <target name="test-compile" depends="compile">
+        <javac srcdir="${test.src}" destdir="${test.build}" includeantruntime="false">
+            <classpath refid="classpath.test"/>
+        </javac>
+    </target>
 
-  <target name="test" depends="test-compile">
-    <junit printsummary="on" haltonfailure="yes" fork="true">
-      <classpath>
-        <path refid="classpath.test"/>
-        <pathelement location="${test.build}"/>
-      </classpath>
-      <formatter type="brief" usefile="false"/>
-      <batchtest>
-        <fileset dir="${test.src}" includes="**/*Test.java" />
-      </batchtest>
-    </junit>
-  </target>
+    <target name="test" depends="test-compile">
+        <junit printsummary="on" haltonfailure="yes" fork="true">
+            <classpath>
+                <path refid="classpath.test"/>
+                <pathelement location="${test.build}"/>
+            </classpath>
+            <formatter type="brief" usefile="true"/>
+            <batchtest>
+                <fileset dir="${test.src}" includes="**/SenderTestSuite.java"/>
+            </batchtest>
+        </junit>
+    </target>
 
-  <target name="dist" depends="compile"
-        description="generate the distribution">
-    <!-- Create the distribution directory -->
-    <mkdir dir="${dist}/lib"/>
+    <target name="dist" depends="compile"
+            description="generate the distribution">
+        <!-- Create the distribution directory -->
+        <mkdir dir="${dist}/lib"/>
 
-    <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
-    <jar jarfile="${dist}/lib/sender-${DSTAMP}.jar" basedir="${build}">
-      <manifest>
-        <attribute name="Main-Class" value="com.darkbytes.sender.Sender" />
-      </manifest>
-    </jar>
-  </target>
+        <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+        <jar jarfile="${dist}/lib/sender-${DSTAMP}.jar" basedir="${build}">
+            <manifest>
+                <attribute name="Main-Class" value="com.darkbytes.sender.Sender"/>
+            </manifest>
+        </jar>
+    </target>
 
-  <target name="run" depends="dist">
-    <java jar="${dist}/lib/sender-${DSTAMP}.jar" fork="true"/>
-  </target>
+    <target name="run" depends="dist">
+        <java jar="${dist}/lib/sender-${DSTAMP}.jar" fork="true"/>
+    </target>
 
-  <target name="clean"
-        description="clean up">
-    <!-- Delete the ${build} and ${dist} directory trees -->
-    <delete dir="${build}"/>
-    <delete dir="${dist}"/>
-  </target>
+    <target name="clean"
+            description="clean up">
+        <!-- Delete the ${build} and ${dist} directory trees -->
+        <delete dir="${build}"/>
+        <delete dir="${dist}"/>
+    </target>
 </project>
 
