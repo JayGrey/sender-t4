@@ -17,12 +17,14 @@ public final class SMTPServer {
 
     private static SMTPServer instance;
     private static Logger logger = Logger.getLogger(Sender.class.getName());
+    private Properties senderProperties;
     private Session session;
 
     private SMTPServer(Properties properties) {
+        senderProperties = properties;
         Properties SMTPProps = new Properties();
-        SMTPProps.put("mail.smtp.host", (String) properties.get("smtp.host"));
-        SMTPProps.put("mail.smtp.port", (Integer) properties.get("smtp.port"));
+        SMTPProps.put("mail.smtp.host", (String) senderProperties.get("smtp.host"));
+        SMTPProps.put("mail.smtp.port", (Integer) senderProperties.get("smtp.port"));
         session = Session.getInstance(SMTPProps, null);
         session.setDebug(true);
     }
@@ -38,7 +40,7 @@ public final class SMTPServer {
     boolean send(String subject, String[] email, File[] files) {
         MimeMessage message = new MimeMessage(session);
         try {
-            message.setFrom("sender@example.org");
+            message.setFrom((String)senderProperties.get("smtp.from"));
             InternetAddress[] addresses = new InternetAddress[email.length];
             for (int i = 0; i < email.length; i++) {
                 addresses[i] = new InternetAddress(email[i]);
@@ -62,9 +64,9 @@ public final class SMTPServer {
             return true;
 
         } catch (MessagingException e) {
-            logger.log(Level.FINE, "mail exception", e);
+            logger.log(Level.SEVERE, "mail exception", e);
         } catch (IOException e) {
-            logger.log(Level.FINE, "IO exception", e);
+            logger.log(Level.SEVERE, "IO exception", e);
         }
         return false;
     }

@@ -36,7 +36,7 @@ public final class Sender {
         try {
             clients = importClients(new BufferedReader(new FileReader(senderSettings.getProperty("client_file"))));
         } catch (FileNotFoundException e) {
-            logger.log(Level.FINE, "Cant find clients file", e);
+            logger.log(Level.SEVERE, "Cant find clients file", e);
         } finally {
             if (clients == null) {
                 clients = Collections.emptyList();
@@ -79,7 +79,7 @@ public final class Sender {
                 } else if (line.matches(DIRECTION_REGEX)) {
                     // check direction without client
                     if (currentClient == null) {
-                        logger.log(Level.FINE, "Found direction w/o client at line {0}, skip it",
+                        logger.log(Level.SEVERE, "Found direction w/o client at line {0}, skip it",
                                 lineReader.getLineNumber());
                         continue;
                     }
@@ -88,7 +88,7 @@ public final class Sender {
                     int closeParenthesis = line.indexOf(')');
                     String[] elements = line.substring(openParenthesis + 1, closeParenthesis).split("\\|");
                     if (elements.length != 4) {
-                        logger.log(Level.FINE, "Wrong number of fields in direction, at line {0} ", lineReader.getLineNumber());
+                        logger.log(Level.SEVERE, "Wrong number of fields in direction, at line {0} ", lineReader.getLineNumber());
                         continue;
                     }
 
@@ -98,7 +98,7 @@ public final class Sender {
 
                     // check path
                     if (path.length() == 0) {
-                        logger.log(Level.FINE, "path missing at line {0}", lineReader.getLineNumber());
+                        logger.log(Level.SEVERE, "path missing at line {0}", lineReader.getLineNumber());
                         continue;
                     }
 
@@ -110,14 +110,14 @@ public final class Sender {
                         }
                     }
                     if (emailList.size() == 0) {
-                        logger.log(Level.FINE, "email address missing at line {0}", lineReader.getLineNumber());
+                        logger.log(Level.SEVERE, "email address missing at line {0}", lineReader.getLineNumber());
                         continue;
                     }
 
                     currentClient.addDirection(new Direction(new File(path), mask, emailList.toArray(new String[0]), subject));
 
                 } else {
-                    logger.log(Level.FINE, "error parsing string [{0}] at line {1}",
+                    logger.log(Level.SEVERE, "error parsing string [{0}] at line {1}",
                             new Object[]{line, lineReader.getLineNumber()});
                 }
             }
@@ -126,7 +126,7 @@ public final class Sender {
                 result.add(currentClient);
             }
         } catch (IOException e) {
-            logger.log(Level.FINE, "error reading clients file", e);
+            logger.log(Level.SEVERE, "error reading clients file", e);
         }
         return result;
     }
@@ -149,9 +149,9 @@ public final class Sender {
         try (Reader reader = new BufferedReader(new FileReader(SENDER_SETTINGS_FILE))) {
             properties.load(reader);
         } catch (FileNotFoundException e) {
-            System.out.format("Settings file %s not found%n", filename);
+            logger.log(Level.SEVERE, "Settings file {0} not found%n", filename);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "IO Exception", e);
         }
 
         if (properties.getProperty("client_file") == null) {
@@ -164,6 +164,10 @@ public final class Sender {
 
         if (properties.getProperty("smtp.port") == null) {
             properties.setProperty("smtp.port", "21");
+        }
+
+        if (properties.getProperty("smtp.from") == null) {
+            properties.setProperty("smtp.from", "sender@example.org");
         }
 
         if (properties.getProperty("sleep_time") == null) {
@@ -198,27 +202,27 @@ public final class Sender {
         if (smtp.send(direction.subject, direction.email, files)) {
             // delete sent files
             for (File file : files) {
-                logger.log(Level.INFO, String.format("file %s ==> sent to %s", file.getName(), direction.email[0]));
+                logger.log(Level.INFO, "file {0} ==> sent to {1}", new Object[]{file.getName(), direction.email[0]});
                 file.delete();
             }
         } else {
-            logger.log(Level.FINE, "Error sendign file via smtp");
+            logger.log(Level.SEVERE, "Error sendign file via smtp");
         }
     }
 
     void start() {
         // all goes here
-        System.out.println("start processing");
+        logger.info("start processing");
         for (Client client : clients) {
             for (Direction direction : client.getDirections()) {
                 processDirection(direction);
             }
         }
-        System.out.println("stop processing");
+        logger.info("stop processing");
     }
 
     public static void main(String[] args) {
-        System.out.println("Sender t4");
+        logger.info("Sender t4");
         getInstance().start();
     }
 }
