@@ -11,18 +11,6 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 
-class Filter implements FilenameFilter {
-    private String mask;
-
-    Filter(String mask) {
-        this.mask = mask;
-    }
-
-    public boolean accept(File dir, String name) {
-        return name.endsWith(mask);
-    }
-}
-
 public final class Sender {
 
     private List<Client> clients;
@@ -200,6 +188,18 @@ public final class Sender {
         }
 
         // get all files by extinsion
+        class Filter implements FilenameFilter {
+            private String mask;
+
+            Filter(String mask) {
+                this.mask = mask;
+            }
+
+            public boolean accept(File dir, String name) {
+                return name.endsWith(mask);
+            }
+        }
+
         File[] files = direction.path.listFiles(new Filter(direction.mask));
         if (files.length == 0) {
             return;
