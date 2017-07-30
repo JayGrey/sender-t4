@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 
@@ -27,10 +28,17 @@ public final class Sender {
     private List<Client> clients;
     private Properties senderSettings;
     private final String SENDER_SETTINGS_FILE = "sender.properties";
+    private final String SENDER_LOG_SETTINGS_FILE = "log.properties";
     private static Sender instance;
     private static Logger logger = Logger.getLogger(Sender.class.getName());
 
     private Sender() {
+        try (InputStream stream = new FileInputStream(SENDER_LOG_SETTINGS_FILE)) {
+            LogManager.getLogManager().readConfiguration(stream);
+        } catch (IOException e) {
+            System.out.println("Can't read log settings from configuration file");
+        }
+
         senderSettings = loadSettings(SENDER_SETTINGS_FILE);
 
         try {
@@ -63,7 +71,7 @@ public final class Sender {
             Client currentClient = null;
             while ((line = lineReader.readLine()) != null) {
                 line = line.trim();
-                if (line.startsWith("#")) {
+                if (line.startsWith("#") || line.length() == 0) {
                     continue;
                 }
 
