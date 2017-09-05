@@ -22,8 +22,7 @@
         <mkdir dir="${test.build}"/>
     </target>
 
-    <target name="compile" depends="init"
-            description="compile the source">
+    <target name="compile" depends="init" description="compile the source">
         <!-- Compile the java code from ${src} into ${build} -->
         <javac srcdir="${src}" destdir="${build}" includeantruntime="false" debug="true" debuglevel="lines,vars,source">
             <compilerarg value="-Xlint:unchecked"/>
@@ -53,21 +52,25 @@
         </junit>
     </target>
 
-    <target name="dist" depends="compile"
-            description="generate the distribution">
+    <target name="dist" depends="compile" description="generate the distribution">
         <!-- Create the distribution directory -->
-        <mkdir dir="${dist}/lib"/>
-
+        <mkdir dir="${dist}"/>
+        <copy file="sender.properties" todir="${dist}" />
+        <copy file="clients.txt" todir="${dist}" />
+        <copy file="log.properties" todir="${dist}" />
+        <copy file="run.bat" todir="${dist}" />
         <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
-        <jar jarfile="${dist}/lib/sender-${DSTAMP}.jar" basedir="${build}">
+        <jar jarfile="${dist}/sender.jar" basedir="${build}">
             <manifest>
                 <attribute name="Main-Class" value="com.darkbytes.sender.Sender"/>
             </manifest>
         </jar>
     </target>
 
-    <target name="run" depends="dist">
-        <java jar="${dist}/lib/sender-${DSTAMP}.jar" fork="true"/>
+    <target name="run" depends="dist" description="run application">
+        <java jar="${dist}/sender.jar" fork="true">
+            <jvmarg value="-Djava.util.logging.config.file=log.properties"/>
+        </java>
     </target>
 
     <target name="clean"
