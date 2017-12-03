@@ -6,12 +6,18 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 
 public final class Main {
@@ -24,6 +30,7 @@ public final class Main {
 
     private Properties settings;
     private MailSender sender;
+    private List<Client> clients;
 
 
     public static void main(String[] args) {
@@ -31,19 +38,13 @@ public final class Main {
         new Main().start();
     }
 
-    private Main() {
-        try (InputStream stream =
-                     new FileInputStream(SENDER_LOG_SETTINGS_FILE)) {
+    private void initLog(String fileName) {
+        try (InputStream stream = new FileInputStream(fileName)) {
             LogManager.getLogManager().readConfiguration(stream);
         } catch (IOException e) {
             System.out.println("Can't read log settings from configuration " +
                     "file");
         }
-
-        settings = loadSettings(SENDER_SETTINGS_FILE);
-
-        sender = new MailSender(settings);
-
     }
 
     private Properties loadSettings(String filename) {
@@ -99,13 +100,46 @@ public final class Main {
     }
 
     void start() {
+        initLog(SENDER_LOG_SETTINGS_FILE);
+        settings = loadSettings(SENDER_SETTINGS_FILE);
+        clients = loadClients();
+        sender = new MailSender(settings);
+
         logger.info("start processing");
         sender.processTasks(formTasks());
         logger.info("stop processing");
     }
 
     private List<Task> formTasks() {
-        return Collections.emptyList();
+        List<Task> result = new ArrayList<>();
+
+        for (Client client : clients) {
+            Task task = new Task(client.subject,
+                    getFiles(client.directory, client.mask), client.email);
+        }
+
+        return result;
     }
 
+    private List<File> getFiles(String directory, String mask) {
+        List<File> files = new ArrayList<>();
+
+        if (directory == null || mask == null || !new File(directory)
+                .isDirectory()) {
+            return Collections.emptyList();
+        }
+
+        PathMatcher matcher =
+                FileSystems.getDefault().getPathMatcher("glob:" + mask);
+
+        try {
+            files = Files
+                    .find(Paths.get(directory), 0, (p, a) -> matcher.matches(p))
+                    .map(p -> p.toFile())
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "error", e);
+        }
+        return files;
+    }
 }

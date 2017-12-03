@@ -34,6 +34,10 @@ public class MailSender {
     }
 
     void send(Task task) {
+        if (!checkArg(task)) {
+            return;
+        }
+
         MimeMessage message = new MimeMessage(session);
         try {
             message.setFrom((String) senderProperties.get("smtp.from"));
@@ -65,6 +69,11 @@ public class MailSender {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "IO exception", e);
         }
+    }
+
+    private boolean checkArg(Task task) {
+        return task == null || task.emails == null || task.files == null ||
+                task.emails.size() == 0 || task.files.size() == 0;
     }
 
     public void processTasks(List<Task> tasks) {
