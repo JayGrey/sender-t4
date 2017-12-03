@@ -61,7 +61,7 @@
         <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
         <jar jarfile="${dist}/lib/sender-${DSTAMP}.jar" basedir="${build}">
             <manifest>
-                <attribute name="Main-Class" value="com.darkbytes.sender.Sender"/>
+                <attribute name="Main-Class" value="com.darkbytes.sender.Client"/>
             </manifest>
         </jar>
     </target>

@@ -1,55 +1,79 @@
 package com.darkbytes.sender;
 
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 
-public class Client {
-    private String name;
-    private List<Direction> directions;
+public final class Client {
 
-    Client(String name) {
-        this(name, new ArrayList<Direction>());
+    private Properties senderSettings;
+    private final String SENDER_SETTINGS_FILE = "sender.properties";
+    private final String SENDER_LOG_SETTINGS_FILE = "log.properties";
+    private static Client instance;
+    private static Logger logger = Logger.getLogger(Client.class.getName());
+
+
+    public static void main(String[] args) {
+        logger.info("Sender t4");
+        new Client().start();
     }
 
-    Client(String name, List<Direction> directions) {
-        this.name = name;
-        this.directions = directions;
-    }
-
-    public void addDirection(Direction direction) {
-        if (directions == null || direction == null) {
-            return;
+    private Client() {
+        try (InputStream stream =
+                     new FileInputStream(SENDER_LOG_SETTINGS_FILE)) {
+            LogManager.getLogManager().readConfiguration(stream);
+        } catch (IOException e) {
+            System.out.println("Can't read log settings from configuration " +
+                    "file");
         }
-        directions.add(direction);
+
+        senderSettings = loadSettings(SENDER_SETTINGS_FILE);
+
     }
 
-    public List<Direction> getDirections() {
-        return directions;
-    }
-
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == null) {
-            return false;
-        } else if (other == this) {
-            return false;
-        } else if (other instanceof Client) {
-            Client client = (Client) other;
-            return client.name.equals(name) && client.directions.equals(directions);
-        } else {
-            return false;
+    private Properties loadSettings(String filename) {
+        Properties properties = new Properties();
+        try (Reader reader = new BufferedReader(
+                new FileReader(SENDER_SETTINGS_FILE))) {
+            properties.load(reader);
+        } catch (FileNotFoundException e) {
+            logger.log(Level.SEVERE, "Settings file {0} not found%n", filename);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "IO Exception", e);
         }
+
+        if (properties.getProperty("client_file") == null) {
+            properties.setProperty("client_file", "clients.bin");
+        }
+
+        if (properties.getProperty("smtp.host") == null) {
+            properties.setProperty("smtp.host", "127.0.0.1");
+        }
+
+        if (properties.getProperty("smtp.port") == null) {
+            properties.setProperty("smtp.port", "21");
+        }
+
+        if (properties.getProperty("smtp.from") == null) {
+            properties.setProperty("smtp.from", "sender@example.org");
+        }
+
+        if (properties.getProperty("sleep_time") == null) {
+            properties.setProperty("sleep_time", "5");
+        }
+
+        return properties;
     }
 
-    @Override
-    public String toString() {
-        return String.format("c (%s)", name);
+    void start() {
+        // all goes here
+        logger.info("start processing");
+
+        logger.info("stop processing");
     }
 
-    public String getName() {
-        return name;
-    }
 }

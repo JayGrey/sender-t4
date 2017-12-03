@@ -13,14 +13,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public final class SMTPServer {
+public final class MailSender {
 
-    private static SMTPServer instance;
-    private static Logger logger = Logger.getLogger(Sender.class.getName());
+    private static MailSender instance;
+    private static Logger logger = Logger.getLogger(Client.class.getName());
     private Properties senderProperties;
     private Session session;
 
-    private SMTPServer(Properties properties) {
+    private MailSender(Properties properties) {
         senderProperties = properties;
         Properties SMTPProps = new Properties();
         SMTPProps.put("mail.smtp.host", (String) senderProperties.get("smtp.host"));
@@ -29,9 +29,9 @@ public final class SMTPServer {
         session.setDebug(true);
     }
 
-    static SMTPServer getInstance(Properties properties) {
+    static MailSender getInstance(Properties properties) {
         if (instance == null) {
-            instance = new SMTPServer(properties);
+            instance = new MailSender(properties);
         }
 
         return instance;
