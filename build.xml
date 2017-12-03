@@ -11,6 +11,7 @@
         <pathelement location="lib/junit-4.12.jar"/>
         <pathelement location="lib/hamcrest-core-1.3.jar"/>
         <pathelement location="lib/javax.mail-1.6.0.jar"/>
+        <pathelement location="lib/gson-2.8.2.jar"/>
         <pathelement location="${build}"/>
     </path>
 
@@ -61,7 +62,7 @@
         <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
         <jar jarfile="${dist}/lib/sender-${DSTAMP}.jar" basedir="${build}">
             <manifest>
-                <attribute name="Main-Class" value="com.darkbytes.sender.Client"/>
+                <attribute name="Main-Class" value="com.darkbytes.sender.Main"/>
             </manifest>
         </jar>
     </target>

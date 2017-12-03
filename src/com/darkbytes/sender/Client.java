@@ -1,79 +1,18 @@
 package com.darkbytes.sender;
 
+import java.util.List;
 
-import java.io.*;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
+public class Client {
+    public final String name;
+    public final List<String> email;
+    public final String mask;
+    public final String directory;
 
-
-public final class Client {
-
-    private Properties senderSettings;
-    private final String SENDER_SETTINGS_FILE = "sender.properties";
-    private final String SENDER_LOG_SETTINGS_FILE = "log.properties";
-    private static Client instance;
-    private static Logger logger = Logger.getLogger(Client.class.getName());
-
-
-    public static void main(String[] args) {
-        logger.info("Sender t4");
-        new Client().start();
+    public Client(String name, List<String> email, String directory,
+                  String mask) {
+        this.name = name;
+        this.email = email;
+        this.directory = directory;
+        this.mask = mask;
     }
-
-    private Client() {
-        try (InputStream stream =
-                     new FileInputStream(SENDER_LOG_SETTINGS_FILE)) {
-            LogManager.getLogManager().readConfiguration(stream);
-        } catch (IOException e) {
-            System.out.println("Can't read log settings from configuration " +
-                    "file");
-        }
-
-        senderSettings = loadSettings(SENDER_SETTINGS_FILE);
-
-    }
-
-    private Properties loadSettings(String filename) {
-        Properties properties = new Properties();
-        try (Reader reader = new BufferedReader(
-                new FileReader(SENDER_SETTINGS_FILE))) {
-            properties.load(reader);
-        } catch (FileNotFoundException e) {
-            logger.log(Level.SEVERE, "Settings file {0} not found%n", filename);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "IO Exception", e);
-        }
-
-        if (properties.getProperty("client_file") == null) {
-            properties.setProperty("client_file", "clients.bin");
-        }
-
-        if (properties.getProperty("smtp.host") == null) {
-            properties.setProperty("smtp.host", "127.0.0.1");
-        }
-
-        if (properties.getProperty("smtp.port") == null) {
-            properties.setProperty("smtp.port", "21");
-        }
-
-        if (properties.getProperty("smtp.from") == null) {
-            properties.setProperty("smtp.from", "sender@example.org");
-        }
-
-        if (properties.getProperty("sleep_time") == null) {
-            properties.setProperty("sleep_time", "5");
-        }
-
-        return properties;
-    }
-
-    void start() {
-        // all goes here
-        logger.info("start processing");
-
-        logger.info("stop processing");
-    }
-
 }
