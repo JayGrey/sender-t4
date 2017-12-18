@@ -26,7 +26,7 @@ public final class Main {
     private final String SENDER_LOG_SETTINGS_FILE = "log.properties";
 
     private Properties settings;
-    private MailSender sender;
+    private SMTPServer sender;
 
 
     public static void main(String[] args) {
@@ -105,7 +105,7 @@ public final class Main {
         initLog(SENDER_LOG_SETTINGS_FILE);
         settings = loadSettings(SENDER_SETTINGS_FILE);
         List<Client> clients = loadClients(settings.getProperty("client_file"));
-        sender = new MailSender(settings);
+        sender = new SMTPServer(settings);
 
         logger.info("start processing");
         sender.processTasks(formTasks(clients));

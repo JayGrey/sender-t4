@@ -15,13 +15,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class MailSender {
+public class SMTPServer {
 
     private static Logger logger = Logger.getLogger(Main.class.getName());
     private Properties senderProps;
     private Session session;
 
-    MailSender(Properties properties) {
+    SMTPServer(Properties properties) {
         senderProps = properties;
         Properties SMTPProps = new Properties();
         SMTPProps.put("mail.smtp.host", senderProps.get("smtp.host"));
@@ -73,8 +73,8 @@ public class MailSender {
     }
 
     private boolean checkArg(Task task) {
-        return task == null || task.emails == null || task.files == null ||
-                task.emails.size() == 0 || task.files.size() == 0;
+        return task != null && task.emails != null && task.files != null &&
+                task.emails.size() != 0 && task.files.size() != 0;
     }
 
     public void processTasks(List<Task> tasks) {
