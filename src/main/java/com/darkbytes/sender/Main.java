@@ -6,12 +6,16 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 
 public final class Main {
@@ -23,7 +27,6 @@ public final class Main {
 
     private Properties settings;
     private MailSender sender;
-    private List<Client> clients;
 
 
     public static void main(String[] args) {
@@ -77,7 +80,7 @@ public final class Main {
         return properties;
     }
 
-    private List<Client> loadClients() {
+    List<Client> loadClients(String filename) {
         Gson gson = new Gson();
         Type collectionType = new TypeToken<List<Client>>() {
         }.getType();
@@ -85,8 +88,7 @@ public final class Main {
         List<Client> result = Collections.emptyList();
 
         try (BufferedReader reader
-                     = new BufferedReader(new FileReader(
-                settings.getProperty("client_file")))) {
+                     = new BufferedReader(new FileReader(filename))) {
             result = gson.fromJson(reader, collectionType);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "error reading clients file");
@@ -98,15 +100,15 @@ public final class Main {
     private void start() {
         initLog(SENDER_LOG_SETTINGS_FILE);
         settings = loadSettings(SENDER_SETTINGS_FILE);
-        clients = loadClients();
+        List<Client> clients = loadClients(settings.getProperty("client_file"));
         sender = new MailSender(settings);
 
         logger.info("start processing");
-        sender.processTasks(formTasks());
+        sender.processTasks(formTasks(clients));
         logger.info("stop processing");
     }
 
-    private List<Task> formTasks() {
+    List<Task> formTasks(List<Client> clients) {
         List<Task> result = new ArrayList<>();
 
         for (Client client : clients) {
@@ -127,15 +129,6 @@ public final class Main {
 
         PathMatcher matcher =
                 FileSystems.getDefault().getPathMatcher("glob:" + mask);
-
-/*        try {
-            files = Files.find(Paths.get(directory), 0,
-                    (p, a) -> matcher.matches(p.getFileName()))
-                    .map(Path::toFile)
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "error finding files", e);
-        }*/
 
         for (File f : new File(directory).listFiles()) {
             if (matcher.matches(Paths.get(f.getName()))) {

@@ -50,7 +50,7 @@ public class MailSender {
 
             message.setRecipients(Message.RecipientType.TO, addresses);
 
-            message.setSubject(task.subject);
+            message.setSubject(task.subject, "utf-8");
             Multipart multipart = new MimeMultipart();
             for (File file : task.files) {
                 MimeBodyPart bodyPart = new MimeBodyPart();
