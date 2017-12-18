@@ -18,17 +18,19 @@ import java.util.logging.Logger;
 public class MailSender {
 
     private static Logger logger = Logger.getLogger(Main.class.getName());
-    private Properties senderProperties;
+    private Properties senderProps;
     private Session session;
 
     MailSender(Properties properties) {
-        senderProperties = properties;
+        senderProps = properties;
         Properties SMTPProps = new Properties();
-        SMTPProps.put("mail.smtp.host", senderProperties.get("smtp.host"));
+        SMTPProps.put("mail.smtp.host", senderProps.get("smtp.host"));
         SMTPProps.put("mail.smtp.port",
-                Integer.valueOf((String) senderProperties.get("smtp.port")));
+                Integer.valueOf((String) senderProps.get("smtp.port")));
         session = Session.getInstance(SMTPProps, null);
-        session.setDebug(true);
+        if (senderProps.getProperty("email.debug").equalsIgnoreCase("true")) {
+            session.setDebug(true);
+        }
     }
 
     void send(Task task) {
@@ -39,7 +41,7 @@ public class MailSender {
 
         MimeMessage message = new MimeMessage(session);
         try {
-            message.setFrom((String) senderProperties.get("smtp.from"));
+            message.setFrom((String) senderProps.get("smtp.from"));
 
             InternetAddress[] addresses =
                     new InternetAddress[task.emails.size()];

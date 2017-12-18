@@ -44,40 +44,44 @@ public final class Main {
     }
 
     private Properties loadSettings(String filename) {
-        //todo: add debug mail flag
         //todo: add max file size flag
         //todo: add max amount of files flag
-        Properties properties = new Properties();
+        Properties props = new Properties();
         try (Reader reader = new BufferedReader(
                 new FileReader(SENDER_SETTINGS_FILE))) {
-            properties.load(reader);
+            props.load(reader);
         } catch (FileNotFoundException e) {
             logger.log(Level.SEVERE, "Settings file {0} not found%n", filename);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "IO Exception", e);
         }
 
-        if (properties.getProperty("client_file") == null) {
-            properties.setProperty("client_file", "clients.json");
+        if (props.getProperty("client_file") == null) {
+            props.setProperty("client_file", "clients.json");
         }
 
-        if (properties.getProperty("smtp.host") == null) {
-            properties.setProperty("smtp.host", "127.0.0.1");
+        if (props.getProperty("smtp.host") == null) {
+            props.setProperty("smtp.host", "127.0.0.1");
         }
 
-        if (properties.getProperty("smtp.port") == null) {
-            properties.setProperty("smtp.port", "21");
+        if (props.getProperty("smtp.port") == null) {
+            props.setProperty("smtp.port", "21");
         }
 
-        if (properties.getProperty("smtp.from") == null) {
-            properties.setProperty("smtp.from", "sender@example.org");
+        if (props.getProperty("smtp.from") == null) {
+            props.setProperty("smtp.from", "sender@example.org");
         }
 
-        if (properties.getProperty("sleep_time") == null) {
-            properties.setProperty("sleep_time", "5");
+        if (props.getProperty("email.debug") == null ||
+                !props.getProperty("email.debug").equalsIgnoreCase("true")) {
+            props.setProperty("email.debug", "false");
         }
 
-        return properties;
+        if (props.getProperty("sleep_time") == null) {
+            props.setProperty("sleep_time", "5");
+        }
+
+        return props;
     }
 
     List<Client> loadClients(String filename) {
