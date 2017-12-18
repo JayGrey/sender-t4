@@ -28,7 +28,7 @@ public class MailSender {
         SMTPProps.put("mail.smtp.host",
                 (String) senderProperties.get("smtp.host"));
         SMTPProps.put("mail.smtp.port",
-                (Integer) senderProperties.get("smtp.port"));
+                Integer.valueOf((String)senderProperties.get("smtp.port")));
         session = Session.getInstance(SMTPProps, null);
         session.setDebug(true);
     }
