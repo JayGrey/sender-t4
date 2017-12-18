@@ -22,15 +22,12 @@ public final class Main {
 
     private static Logger logger = Logger.getLogger(Main.class.getName());
 
-    private final String SENDER_SETTINGS_FILE = "sender.properties";
-    private final String SENDER_LOG_SETTINGS_FILE = "log.properties";
+    private static final String SENDER_SETTINGS_FILE = "sender.properties";
+    private static final String SENDER_LOG_SETTINGS_FILE = "log.properties";
 
     private Properties settings;
-    private SMTPServer sender;
-
 
     public static void main(String[] args) {
-        logger.info("Sender t4");
         new Main().start();
     }
 
@@ -105,41 +102,13 @@ public final class Main {
         initLog(SENDER_LOG_SETTINGS_FILE);
         settings = loadSettings(SENDER_SETTINGS_FILE);
         List<Client> clients = loadClients(settings.getProperty("client_file"));
-        sender = new SMTPServer(settings);
+        Sender sender = new Sender(clients);
+        SMTPServer smtpServer = new SMTPServer(settings);
 
+        logger.info("Sender t4");
         logger.info("start processing");
-        sender.processTasks(formTasks(clients));
+        sender.processTasks(smtpServer);
         logger.info("stop processing");
     }
 
-    List<Task> formTasks(List<Client> clients) {
-        List<Task> result = new ArrayList<>();
-
-        for (Client client : clients) {
-            result.add(new Task(client.subject,
-                    getFiles(client.directory, client.mask), client.email));
-        }
-
-        return result;
-    }
-
-    List<File> getFiles(String directory, String mask) {
-        List<File> files = new ArrayList<>();
-
-        if (directory == null || mask == null || !new File(directory)
-                .isDirectory()) {
-            return Collections.emptyList();
-        }
-
-        PathMatcher matcher =
-                FileSystems.getDefault().getPathMatcher("glob:" + mask);
-
-        for (File f : new File(directory).listFiles()) {
-            if (matcher.matches(Paths.get(f.getName()))) {
-                files.add(f);
-            }
-        }
-
-        return files;
-    }
 }

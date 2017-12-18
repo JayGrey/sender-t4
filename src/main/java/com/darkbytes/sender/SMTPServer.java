@@ -76,11 +76,4 @@ public class SMTPServer {
         return task != null && task.emails != null && task.files != null &&
                 task.emails.size() != 0 && task.files.size() != 0;
     }
-
-    public void processTasks(List<Task> tasks) {
-
-        for (Task task : tasks) {
-            send(task);
-        }
-    }
 }
