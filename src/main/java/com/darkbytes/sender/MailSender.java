@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 
 public class MailSender {
 
-    private static MailSender instance;
     private static Logger logger = Logger.getLogger(Main.class.getName());
     private Properties senderProperties;
     private Session session;
@@ -25,16 +24,16 @@ public class MailSender {
     MailSender(Properties properties) {
         senderProperties = properties;
         Properties SMTPProps = new Properties();
-        SMTPProps.put("mail.smtp.host",
-                (String) senderProperties.get("smtp.host"));
+        SMTPProps.put("mail.smtp.host", senderProperties.get("smtp.host"));
         SMTPProps.put("mail.smtp.port",
-                Integer.valueOf((String)senderProperties.get("smtp.port")));
+                Integer.valueOf((String) senderProperties.get("smtp.port")));
         session = Session.getInstance(SMTPProps, null);
         session.setDebug(true);
     }
 
     void send(Task task) {
         if (!checkArg(task)) {
+            logger.log(Level.WARNING, "error in args");
             return;
         }
 

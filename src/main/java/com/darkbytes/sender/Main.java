@@ -6,14 +6,8 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.nio.file.*;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -22,7 +16,6 @@ import java.util.stream.Collectors;
 
 public final class Main {
 
-    private static Main instance;
     private static Logger logger = Logger.getLogger(Main.class.getName());
 
     private final String SENDER_SETTINGS_FILE = "sender.properties";
@@ -48,6 +41,9 @@ public final class Main {
     }
 
     private Properties loadSettings(String filename) {
+        //todo: add debug mail flag
+        //todo: add max file size flag
+        //todo: add max amount of files flag
         Properties properties = new Properties();
         try (Reader reader = new BufferedReader(
                 new FileReader(SENDER_SETTINGS_FILE))) {
@@ -81,7 +77,7 @@ public final class Main {
         return properties;
     }
 
-    List<Client> loadClients() {
+    private List<Client> loadClients() {
         Gson gson = new Gson();
         Type collectionType = new TypeToken<List<Client>>() {
         }.getType();
@@ -99,7 +95,7 @@ public final class Main {
         return result;
     }
 
-    void start() {
+    private void start() {
         initLog(SENDER_LOG_SETTINGS_FILE);
         settings = loadSettings(SENDER_SETTINGS_FILE);
         clients = loadClients();
@@ -114,14 +110,14 @@ public final class Main {
         List<Task> result = new ArrayList<>();
 
         for (Client client : clients) {
-            Task task = new Task(client.subject,
-                    getFiles(client.directory, client.mask), client.email);
+            result.add(new Task(client.subject,
+                    getFiles(client.directory, client.mask), client.email));
         }
 
         return result;
     }
 
-    private List<File> getFiles(String directory, String mask) {
+    List<File> getFiles(String directory, String mask) {
         List<File> files = new ArrayList<>();
 
         if (directory == null || mask == null || !new File(directory)
@@ -132,14 +128,21 @@ public final class Main {
         PathMatcher matcher =
                 FileSystems.getDefault().getPathMatcher("glob:" + mask);
 
-        try {
-            files = Files
-                    .find(Paths.get(directory), 0, (p, a) -> matcher.matches(p))
-                    .map(p -> p.toFile())
+/*        try {
+            files = Files.find(Paths.get(directory), 0,
+                    (p, a) -> matcher.matches(p.getFileName()))
+                    .map(Path::toFile)
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "error", e);
+            logger.log(Level.SEVERE, "error finding files", e);
+        }*/
+
+        for (File f : new File(directory).listFiles()) {
+            if (matcher.matches(Paths.get(f.getName()))) {
+                files.add(f);
+            }
         }
+
         return files;
     }
 }
