@@ -1,0 +1,1 @@
+smtp-sink -v -D build/%Y%m%d%H/%M. 127.0.0.1:6666 10 

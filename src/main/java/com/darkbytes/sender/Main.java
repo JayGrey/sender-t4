@@ -43,6 +43,7 @@ public final class Main {
     private Properties loadSettings(String filename) {
         //todo: add max file size flag
         //todo: add max amount of files flag
+        //todo: add base dir settings
         Properties props = new Properties();
         try (Reader reader = new BufferedReader(
                 new FileReader(SENDER_SETTINGS_FILE))) {
