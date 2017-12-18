@@ -2,8 +2,10 @@
 /dist/*
 /bundle/*
 /build/*
+/target/*
 *.iml
 .gitignore
 *.txt
 *.cmd
 *.log
+*.json
