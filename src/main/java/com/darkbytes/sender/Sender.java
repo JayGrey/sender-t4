@@ -43,8 +43,10 @@ public class Sender {
         List<Task> result = new ArrayList<>();
 
         for (Client client : clients) {
-            result.add(new Task(client.subject,
-                    getFiles(client.directory, client.mask), client.email));
+            List<File> files = getFiles(client.directory, client.mask);
+            if (files.size() > 0 && client.email.size() > 0) {
+                result.add(new Task(client.subject, files, client.email));
+            }
         }
 
         return result;
