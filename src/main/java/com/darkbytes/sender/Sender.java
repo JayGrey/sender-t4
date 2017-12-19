@@ -14,7 +14,7 @@ public class Sender {
 
     public Sender(List<Client> clients) {
         if (clients == null) {
-            throw new IllegalArgumentException("clients is null");
+            throw new IllegalArgumentException();
         }
         this.clients = clients;
     }
@@ -39,7 +39,7 @@ public class Sender {
         return files;
     }
 
-    List<Task> formTasks(List<Client> clients) {
+    List<Task> formTasks() {
         List<Task> result = new ArrayList<>();
 
         for (Client client : clients) {
@@ -52,7 +52,7 @@ public class Sender {
 
     public void processTasks(SMTPServer server) {
 
-        for (Task task : formTasks(clients)) {
+        for (Task task : formTasks()) {
             server.send(task);
         }
     }

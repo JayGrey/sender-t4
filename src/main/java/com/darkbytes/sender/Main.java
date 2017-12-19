@@ -31,7 +31,7 @@ public final class Main {
         new Main().start();
     }
 
-    private void initLog(String fileName) {
+    void initLog(String fileName) {
         try (InputStream stream = new FileInputStream(fileName)) {
             LogManager.getLogManager().readConfiguration(stream);
         } catch (IOException e) {
@@ -40,18 +40,20 @@ public final class Main {
         }
     }
 
-    private Properties loadSettings(String filename) {
+    Properties loadSettings(String filename) {
         //todo: add max file size flag
         //todo: add max amount of files flag
         //todo: add base dir settings
         Properties props = new Properties();
         try (Reader reader = new BufferedReader(
-                new FileReader(SENDER_SETTINGS_FILE))) {
+                new FileReader(filename))) {
             props.load(reader);
         } catch (FileNotFoundException e) {
             logger.log(Level.SEVERE, "Settings file {0} not found%n", filename);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "IO Exception", e);
+        } catch (NullPointerException e) {
+            logger.log(Level.SEVERE, "Filename is undefined", e);
         }
 
         if (props.getProperty("client_file") == null) {
@@ -63,7 +65,7 @@ public final class Main {
         }
 
         if (props.getProperty("smtp.port") == null) {
-            props.setProperty("smtp.port", "21");
+            props.setProperty("smtp.port", "25");
         }
 
         if (props.getProperty("smtp.from") == null) {
@@ -73,6 +75,8 @@ public final class Main {
         if (props.getProperty("email.debug") == null ||
                 !props.getProperty("email.debug").equalsIgnoreCase("true")) {
             props.setProperty("email.debug", "false");
+        } else {
+            props.setProperty("email.debug", "true");
         }
 
         if (props.getProperty("sleep_time") == null) {
