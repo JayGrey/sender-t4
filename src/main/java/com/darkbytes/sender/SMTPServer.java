@@ -1,11 +1,7 @@
 package com.darkbytes.sender;
 
-
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -52,7 +48,8 @@ public class SMTPServer {
 
             message.setRecipients(Message.RecipientType.TO, addresses);
 
-            message.setSubject(task.subject, "utf-8");
+            message.setSubject(task.subject);
+
             Multipart multipart = new MimeMultipart();
             for (File file : task.files) {
                 MimeBodyPart bodyPart = new MimeBodyPart();
