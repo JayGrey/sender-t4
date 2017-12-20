@@ -124,10 +124,10 @@ public class MainTest {
     }
 
     private void writelnToFile(File file, String s) throws IOException {
-        try (BufferedWriter writer =
-                     new BufferedWriter(new FileWriter(file))) {
-            writer.write(s);
-            writer.write(System.lineSeparator());
+        new PrintStream(new FileOutputStream(file), true, "utf-8");
+        try (PrintStream writer = new PrintStream(new FileOutputStream(file),
+                true, "utf-8")) {
+            writer.println(s);
         }
     }
 }

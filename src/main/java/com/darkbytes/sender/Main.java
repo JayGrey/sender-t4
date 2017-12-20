@@ -94,7 +94,7 @@ public final class Main {
         List<Client> result = Collections.emptyList();
 
         try (BufferedReader reader
-                     = new BufferedReader(new FileReader(filename))) {
+                     = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "utf-8"))) {
             result = gson.fromJson(reader, collectionType);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "error reading clients file");

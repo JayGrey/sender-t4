@@ -65,6 +65,7 @@ public class SMTPServerTest {
         String actual = "";
 
         message.setSubject(expected, "cp1251");
+
         Enumeration<Header> allHeaders = message.getAllHeaders();
 
         while (allHeaders.hasMoreElements()) {
