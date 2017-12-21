@@ -25,8 +25,9 @@ public class MainTest {
     }
 
     @Test
-    public void loadDefaultSettings() {
-        Properties properties = new Main().loadSettings(null);
+    public void loadDefaultSettingsTest() {
+        Properties properties =
+                new Main().loadDefaultSettings(new Properties());
 
         assertEquals("clients.json", properties.get("client_file"));
         assertEquals("127.0.0.1", properties.get("smtp.host"));
@@ -37,7 +38,7 @@ public class MainTest {
     }
 
     @Test
-    public void loadSettingsFromFile() throws IOException {
+    public void loadSettingsFromFileTest() throws IOException {
         // prepare file
         File file = tempFolder.newFile();
         PrintWriter writer = new PrintWriter(file);
@@ -55,7 +56,7 @@ public class MainTest {
 
 
         Properties properties =
-                new Main().loadSettings(file.getCanonicalPath());
+                new Main().loadSettingsFromFile(file.getCanonicalPath());
 
         assertEquals("cl.json", properties.get("client_file"));
         assertEquals("logger.log", properties.get("log_file"));
@@ -74,7 +75,7 @@ public class MainTest {
         writer.flush();
         writer.close();
 
-        Properties props = new Main().loadSettings(file.getCanonicalPath());
+        Properties props = new Main().loadSettingsFromFile(file.getCanonicalPath());
         assertEquals("true", props.get("email.debug"));
 
         //
@@ -84,7 +85,7 @@ public class MainTest {
         writer.flush();
         writer.close();
 
-        props = new Main().loadSettings(file.getCanonicalPath());
+        props = new Main().loadSettingsFromFile(file.getCanonicalPath());
         assertEquals("true", props.get("email.debug"));
 
         //
@@ -94,7 +95,7 @@ public class MainTest {
         writer.flush();
         writer.close();
 
-        props = new Main().loadSettings(file.getCanonicalPath());
+        props = new Main().loadSettingsFromFile(file.getCanonicalPath());
         assertEquals("false", props.get("email.debug"));
 
         //
@@ -104,7 +105,7 @@ public class MainTest {
         writer.flush();
         writer.close();
 
-        props = new Main().loadSettings(file.getCanonicalPath());
+        props = new Main().loadSettingsFromFile(file.getCanonicalPath());
         assertEquals("false", props.get("email.debug"));
 
     }

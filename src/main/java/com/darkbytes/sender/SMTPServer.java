@@ -1,11 +1,13 @@
 package com.darkbytes.sender;
 
 import javax.mail.*;
-import javax.mail.internet.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,6 +64,9 @@ public class SMTPServer {
             message.setSentDate(new Date());
 
             Transport.send(message);
+            for (File file : task.files) {
+                logger.log(Level.INFO, "file {0} sent", file);
+            }
         } catch (MessagingException e) {
             logger.log(Level.SEVERE, "mail exception", e);
         } catch (IOException e) {
