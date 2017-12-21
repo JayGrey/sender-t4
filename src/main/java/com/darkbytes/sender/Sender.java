@@ -7,8 +7,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Sender {
+
+    private static Logger logger = Logger.getLogger(Main.class.getName());
 
     private final List<Client> clients;
 
@@ -22,20 +26,30 @@ public class Sender {
     List<File> getFiles(String directory, String mask) {
         List<File> files = new ArrayList<>();
 
-        if (directory == null || mask == null || !new File(directory)
-                .isDirectory()) {
+        if (directory == null || !new File(directory).isDirectory()) {
+            logger.log(Level.WARNING, "directory {0} is invalid", directory);
+            return Collections.emptyList();
+        }
+
+        if (mask == null) {
+            logger.log(Level.WARNING, "mask is null");
             return Collections.emptyList();
         }
 
         PathMatcher matcher =
                 FileSystems.getDefault().getPathMatcher("glob:" + mask);
 
-        for (File f : new File(directory).listFiles()) {
+        File[] listFiles = new File(directory).listFiles();
+        if (listFiles == null) {
+            logger.log(Level.SEVERE, "error getting file list");
+            return Collections.emptyList();
+        }
+
+        for (File f : listFiles) {
             if (matcher.matches(Paths.get(f.getName()))) {
                 files.add(f);
             }
         }
-
         return files;
     }
 
