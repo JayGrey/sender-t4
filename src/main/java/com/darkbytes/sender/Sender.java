@@ -69,7 +69,7 @@ public class Sender {
     public void processTasks(SMTPServer server) {
 
         for (Task task : formTasks()) {
-            server.send(task);
+            List<File> processedFiles = server.send(task);
         }
     }
 }
