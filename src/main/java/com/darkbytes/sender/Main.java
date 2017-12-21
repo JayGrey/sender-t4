@@ -98,7 +98,7 @@ public final class Main {
                      = new BufferedReader(new InputStreamReader(
                 new FileInputStream(filename), "utf-8"))) {
             return gson.fromJson(reader, collectionType);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "error reading clients file");
             throw new LoadClientsException();
         }

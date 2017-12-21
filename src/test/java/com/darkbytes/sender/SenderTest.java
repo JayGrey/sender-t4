@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -120,6 +121,20 @@ public class SenderTest {
 
         sender.processTasks(mockServer);
         verify(mockServer, times(2)).send(Mockito.any(Task.class));
+    }
+
+    @Test
+    public void deleteFilesTest() throws IOException {
+        assertEquals(0, tempFolder.getRoot().listFiles().length);
+
+        List<File> files = new ArrayList<>();
+        files.add(tempFolder.newFile());
+        files.add(tempFolder.newFile());
+        assertEquals(2, tempFolder.getRoot().listFiles().length);
+
+        Sender sender = new Sender(Collections.emptyList());
+        sender.deleteFiles(files);
+        assertEquals(0, tempFolder.getRoot().listFiles().length);
     }
 
 }

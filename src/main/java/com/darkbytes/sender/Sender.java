@@ -67,9 +67,17 @@ public class Sender {
     }
 
     public void processTasks(SMTPServer server) {
-
         for (Task task : formTasks()) {
             List<File> processedFiles = server.send(task);
+            deleteFiles(processedFiles);
+        }
+    }
+
+    void deleteFiles(List<File> files) {
+        for (File file : files) {
+            if (!file.delete()) {
+                logger.log(Level.WARNING, "cant't delete file {0}", file);
+            }
         }
     }
 }
