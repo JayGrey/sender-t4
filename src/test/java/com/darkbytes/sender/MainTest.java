@@ -1,5 +1,6 @@
 package com.darkbytes.sender;
 
+import com.darkbytes.sender.exceptions.LoadClientsException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -121,7 +122,12 @@ public class MainTest {
         List<Client> clients = main.loadClients(clientsFile.getCanonicalPath());
         assertEquals(1, clients.size());
         assertEquals("клиент 1", clients.get(0).name);
+    }
 
+    @Test
+    public void loadClientsFromNullFile() {
+        thrown.expect(LoadClientsException.class);
+        new Main().loadClients(null);
     }
 
     private void writelnToFile(File file, String s) throws IOException {

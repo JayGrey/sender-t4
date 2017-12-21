@@ -1,6 +1,7 @@
 package com.darkbytes.sender;
 
 
+import com.darkbytes.sender.exceptions.LoadClientsException;
 import com.darkbytes.sender.exceptions.LoadSettingsException;
 import com.darkbytes.sender.exceptions.SenderException;
 import com.google.gson.Gson;
@@ -8,7 +9,6 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -48,7 +48,7 @@ public final class Main {
             if (props.containsKey("email.debug")) {
                 if (props.getProperty("email.debug").equalsIgnoreCase("true")) {
                     props.setProperty("email.debug", "true");
-                } else  {
+                } else {
                     props.setProperty("email.debug", "false");
                 }
             }
@@ -94,16 +94,13 @@ public final class Main {
         Type collectionType = new TypeToken<List<Client>>() {
         }.getType();
 
-        List<Client> result = Collections.emptyList();
-
         try (BufferedReader reader
                      = new BufferedReader(new FileReader(filename))) {
-            result = gson.fromJson(reader, collectionType);
-        } catch (IOException e) {
+            return gson.fromJson(reader, collectionType);
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "error reading clients file");
+            throw new LoadClientsException();
         }
-
-        return result;
     }
 
     private void start() {
