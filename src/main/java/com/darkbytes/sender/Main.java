@@ -1,16 +1,14 @@
 package com.darkbytes.sender;
 
 
+import com.darkbytes.sender.exceptions.LoadClientsException;
+import com.darkbytes.sender.exceptions.LoadSettingsException;
+import com.darkbytes.sender.exceptions.SenderException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.file.FileSystems;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -19,6 +17,9 @@ import java.util.logging.Logger;
 
 
 public final class Main {
+    //todo: add max file size flag
+    //todo: add max amount of files flag
+    //todo: add base dir settings
 
     private static Logger logger = Logger.getLogger(Main.class.getName());
 
@@ -40,22 +41,25 @@ public final class Main {
         }
     }
 
-    Properties loadSettings(String filename) {
-        //todo: add max file size flag
-        //todo: add max amount of files flag
-        //todo: add base dir settings
+    Properties loadSettingsFromFile(String filename) {
         Properties props = new Properties();
-        try (Reader reader = new BufferedReader(
-                new FileReader(filename))) {
+        try (Reader reader = new BufferedReader(new FileReader(filename))) {
             props.load(reader);
-        } catch (FileNotFoundException e) {
-            logger.log(Level.SEVERE, "Settings file {0} not found%n", filename);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "IO Exception", e);
-        } catch (NullPointerException e) {
-            logger.log(Level.SEVERE, "Filename is undefined", e);
+            if (props.containsKey("email.debug")) {
+                if (props.getProperty("email.debug").equalsIgnoreCase("true")) {
+                    props.setProperty("email.debug", "true");
+                } else {
+                    props.setProperty("email.debug", "false");
+                }
+            }
+        } catch (Exception e) {
+            throw new LoadSettingsException(e);
         }
 
+        return props;
+    }
+
+    Properties loadDefaultSettings(Properties props) {
         if (props.getProperty("client_file") == null) {
             props.setProperty("client_file", "clients.json");
         }
@@ -82,7 +86,6 @@ public final class Main {
         if (props.getProperty("sleep_time") == null) {
             props.setProperty("sleep_time", "5");
         }
-
         return props;
     }
 
@@ -91,29 +94,38 @@ public final class Main {
         Type collectionType = new TypeToken<List<Client>>() {
         }.getType();
 
-        List<Client> result = Collections.emptyList();
-
         try (BufferedReader reader
-                     = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "utf-8"))) {
-            result = gson.fromJson(reader, collectionType);
+                     = new BufferedReader(new InputStreamReader(
+                new FileInputStream(filename), "utf-8"))) {
+            return gson.fromJson(reader, collectionType);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "error reading clients file");
+            throw new LoadClientsException();
         }
-
-        return result;
     }
 
     private void start() {
         initLog(SENDER_LOG_SETTINGS_FILE);
-        settings = loadSettings(SENDER_SETTINGS_FILE);
+        try {
+            settings = loadSettingsFromFile(SENDER_SETTINGS_FILE);
+        } catch (LoadSettingsException e) {
+            logger.log(Level.WARNING, "Error loading setting, use defaults", e);
+            settings = loadDefaultSettings(settings);
+
+        }
         List<Client> clients = loadClients(settings.getProperty("client_file"));
         Sender sender = new Sender(clients);
         SMTPServer smtpServer = new SMTPServer(settings);
 
         logger.info("Sender t4");
         logger.info("start processing");
-        sender.processTasks(smtpServer);
+        try {
+            sender.processTasks(smtpServer);
+        } catch (SenderException e) {
+            logger.log(Level.SEVERE, "Exception", e);
+        } catch (IllegalArgumentException e) {
+            logger.log(Level.SEVERE, "Illegal arguments", e);
+        }
         logger.info("stop processing");
     }
-
 }
