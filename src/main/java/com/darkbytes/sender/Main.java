@@ -130,7 +130,7 @@ public final class Main {
         logger.info("Sender t4");
         logger.info("start processing");
 
-        threadPool.schedule(sender,
+        threadPool.scheduleWithFixedDelay(sender, 0,
                 Long.valueOf(settings.getProperty("sleep_time")),
                 TimeUnit.SECONDS);
     }
@@ -139,8 +139,10 @@ public final class Main {
         @Override
         public void run() {
             logger.log(Level.INFO, "shutdown in progress");
+            System.out.println("shutdown in progress");
             threadPool.shutdown();
             logger.info("stop processing");
+            System.out.println("stop processing");
         }
     }
 }
