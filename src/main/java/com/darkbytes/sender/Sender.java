@@ -1,5 +1,7 @@
 package com.darkbytes.sender;
 
+import com.darkbytes.sender.exceptions.SenderException;
+
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
@@ -10,17 +12,19 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Sender {
+public class Sender implements Runnable {
 
     private static Logger logger = Logger.getLogger(Main.class.getName());
 
     private final List<Client> clients;
+    private final Server server;
 
-    public Sender(List<Client> clients) {
-        if (clients == null) {
+    public Sender(SMTPServer server, List<Client> clients) {
+        if (clients == null || server == null) {
             throw new IllegalArgumentException();
         }
         this.clients = clients;
+        this.server = server;
     }
 
     List<File> getFiles(String directory, String mask) {
@@ -66,7 +70,10 @@ public class Sender {
         return result;
     }
 
-    public void processTasks(SMTPServer server) {
+    public void processTasks(Server server) {
+        if (Thread.currentThread().isInterrupted()) {
+            return;
+        }
         for (Task task : formTasks()) {
             List<File> processedFiles = server.send(task);
             deleteFiles(processedFiles);
@@ -78,6 +85,17 @@ public class Sender {
             if (!file.delete()) {
                 logger.log(Level.WARNING, "cant't delete file {0}", file);
             }
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            processTasks(server);
+        } catch (SenderException e) {
+            logger.log(Level.SEVERE, "Exception", e);
+        } catch (IllegalArgumentException e) {
+            logger.log(Level.SEVERE, "Illegal arguments", e);
         }
     }
 }

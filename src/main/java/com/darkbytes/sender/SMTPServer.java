@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class SMTPServer {
+public class SMTPServer extends Server {
 
     private static Logger logger = Logger.getLogger(Main.class.getName());
     private Properties senderProps;
@@ -33,7 +33,8 @@ public class SMTPServer {
         }
     }
 
-    List<File> send(Task task) {
+    @Override
+    public List<File> send(Task task) {
         if (!checkArg(task)) {
             logger.log(Level.WARNING, "error in args");
             return null;

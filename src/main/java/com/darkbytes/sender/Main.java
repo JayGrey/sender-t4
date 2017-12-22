@@ -3,7 +3,6 @@ package com.darkbytes.sender;
 
 import com.darkbytes.sender.exceptions.LoadClientsException;
 import com.darkbytes.sender.exceptions.LoadSettingsException;
-import com.darkbytes.sender.exceptions.SenderException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -11,6 +10,9 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -27,6 +29,8 @@ public final class Main {
     private static final String SENDER_LOG_SETTINGS_FILE = "log.properties";
 
     private Properties settings;
+
+    private ScheduledExecutorService threadPool;
 
     public static void main(String[] args) {
         new Main().start();
@@ -106,6 +110,11 @@ public final class Main {
 
     private void start() {
         initLog(SENDER_LOG_SETTINGS_FILE);
+
+        threadPool = Executors.newScheduledThreadPool(1);
+
+        Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+
         try {
             settings = loadSettingsFromFile(SENDER_SETTINGS_FILE);
         } catch (LoadSettingsException e) {
@@ -114,18 +123,24 @@ public final class Main {
 
         }
         List<Client> clients = loadClients(settings.getProperty("client_file"));
-        Sender sender = new Sender(clients);
         SMTPServer smtpServer = new SMTPServer(settings);
+
+        Sender sender = new Sender(smtpServer, clients);
 
         logger.info("Sender t4");
         logger.info("start processing");
-        try {
-            sender.processTasks(smtpServer);
-        } catch (SenderException e) {
-            logger.log(Level.SEVERE, "Exception", e);
-        } catch (IllegalArgumentException e) {
-            logger.log(Level.SEVERE, "Illegal arguments", e);
+
+        threadPool.schedule(sender,
+                Long.valueOf(settings.getProperty("sleep_time")),
+                TimeUnit.SECONDS);
+    }
+
+    private class ShutdownHook extends Thread {
+        @Override
+        public void run() {
+            logger.log(Level.INFO, "shutdown in progress");
+            threadPool.shutdown();
+            logger.info("stop processing");
         }
-        logger.info("stop processing");
     }
 }
