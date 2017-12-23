@@ -19,9 +19,6 @@ import java.util.logging.Logger;
 
 
 public final class Main {
-    //todo: add max file size flag
-    //todo: add max amount of files flag
-    //todo: add base dir settings
 
     private static Logger logger = Logger.getLogger(Main.class.getName());
 
@@ -85,6 +82,10 @@ public final class Main {
             props.setProperty("email.debug", "false");
         } else {
             props.setProperty("email.debug", "true");
+        }
+
+        if (props.getProperty("email.max_attachments") == null) {
+            props.setProperty("email.max_attachments", "20");
         }
 
         if (props.getProperty("sleep_time") == null) {

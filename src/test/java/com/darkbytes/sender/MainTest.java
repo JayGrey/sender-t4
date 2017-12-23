@@ -35,6 +35,7 @@ public class MainTest {
         assertEquals("25", properties.get("smtp.port"));
         assertEquals("sender@example.org", properties.get("smtp.from"));
         assertEquals("false", properties.get("email.debug"));
+        assertEquals("20", properties.get("email.max_attachments"));
         assertEquals("5", properties.get("sleep_time"));
     }
 
@@ -51,6 +52,7 @@ public class MainTest {
         writer.println("smtp.user = user");
         writer.println("smtp.password = password");
         writer.println("email.debug = true");
+        writer.println("email.max_attachments = 15");
         writer.println("sleep_time = 35");
         writer.flush();
         writer.close();
@@ -65,6 +67,7 @@ public class MainTest {
         assertEquals("6666", properties.get("smtp.port"));
         assertEquals("123@oschadbank.ua", properties.get("smtp.from"));
         assertEquals("true", properties.get("email.debug"));
+        assertEquals("15", properties.get("email.max_attachments"));
         assertEquals("35", properties.get("sleep_time"));
     }
 
@@ -76,7 +79,8 @@ public class MainTest {
         writer.flush();
         writer.close();
 
-        Properties props = new Main().loadSettingsFromFile(file.getCanonicalPath());
+        Properties props = new Main().loadSettingsFromFile(
+                file.getCanonicalPath());
         assertEquals("true", props.get("email.debug"));
 
         //

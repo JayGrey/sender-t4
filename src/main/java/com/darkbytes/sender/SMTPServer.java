@@ -1,7 +1,6 @@
 package com.darkbytes.sender;
 
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -37,47 +36,60 @@ public class SMTPServer extends Server {
     public List<File> send(Task task) {
         if (!checkArg(task)) {
             logger.log(Level.WARNING, "error in args");
-            return null;
+            return Collections.emptyList();
         }
 
-        MimeMessage message = new MimeMessage(session);
         try {
-            message.setFrom((String) senderProps.get("smtp.from"));
+            int maxAttachments = Integer.valueOf(
+                    senderProps.getProperty("email.max_attachments"));
 
-            InternetAddress[] addresses =
-                    new InternetAddress[task.emails.size()];
+            int from = 0;
+            int to = Math.min(maxAttachments, task.files.size());
 
-            for (int i = 0; i < task.emails.size(); i++) {
-                addresses[i] = new InternetAddress(task.emails.get(i));
+            while (from < task.files.size()) {
+                MimeMessage message = new MimeMessage(session);
+                message.setContent(
+                        formAttachments(task.files.subList(from, to)));
+                from = to;
+                to = Math.min(task.files.size(), to + maxAttachments);
+
+                message.setFrom((String) senderProps.get("smtp.from"));
+
+                StringBuilder emails = new StringBuilder();
+                task.emails.forEach(e -> emails.append(e).append(","));
+
+                message.setRecipients(Message.RecipientType.TO, emails
+                        .toString());
+                message.setSubject(task.subject);
+                message.setSentDate(new Date());
+
+                Transport.send(message);
             }
 
-            message.setRecipients(Message.RecipientType.TO, addresses);
-
-            message.setSubject(task.subject);
-
-            Multipart multipart = new MimeMultipart();
-            for (File file : task.files) {
-                MimeBodyPart bodyPart = new MimeBodyPart();
-                bodyPart.attachFile(file);
-                bodyPart.setFileName(file.getName());
-                multipart.addBodyPart(bodyPart);
-            }
-
-            message.setContent(multipart);
-            message.setSentDate(new Date());
-
-            Transport.send(message);
             for (File file : task.files) {
                 logger.log(Level.INFO, "file {0} sent", file);
             }
 
             return task.files;
-        } catch (MessagingException e) {
-            logger.log(Level.SEVERE, "mail exception", e);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "IO exception", e);
+
+        } catch (MessagingException | IOException e) {
+            logger.log(Level.SEVERE, "exception", e);
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+    }
+
+    private Multipart formAttachments(List<File> files)
+            throws IOException, MessagingException {
+
+        Multipart multipart = new MimeMultipart();
+        for (File file : files) {
+            MimeBodyPart bodyPart = new MimeBodyPart();
+            bodyPart.attachFile(file);
+            bodyPart.setFileName(file.getName());
+            multipart.addBodyPart(bodyPart);
+        }
+
+        return multipart;
     }
 
     private boolean checkArg(Task task) {
