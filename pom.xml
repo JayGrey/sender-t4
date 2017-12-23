@@ -4,7 +4,7 @@
     <groupId>com.darkbytes</groupId>
     <artifactId>sender</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <name>sender-t4</name>
     <url>http://maven.apache.org</url>
     <properties>

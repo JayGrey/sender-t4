@@ -67,7 +67,8 @@ public class SMTPServer extends Server {
             }
 
             for (File file : task.files) {
-                logger.log(Level.INFO, "file {0} sent", file);
+                logger.log(Level.INFO, "file {0} sent to {1}",
+                        new Object[]{file, task.emails});
             }
 
             return task.files;
