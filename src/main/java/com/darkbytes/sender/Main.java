@@ -10,9 +10,10 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -24,10 +25,12 @@ public final class Main {
 
     private static final String SENDER_SETTINGS_FILE = "sender.properties";
     private static final String SENDER_LOG_SETTINGS_FILE = "log.properties";
+    private final BlockingQueue<Task> taskQueue =
+            new ArrayBlockingQueue<>(10);
 
     private Properties settings;
 
-    private ScheduledExecutorService threadPool;
+    private ExecutorService threadPool;
 
     public static void main(String[] args) {
         new Main().start();
@@ -112,7 +115,7 @@ public final class Main {
     private void start() {
         initLog(SENDER_LOG_SETTINGS_FILE);
 
-        threadPool = Executors.newScheduledThreadPool(1);
+        threadPool = Executors.newFixedThreadPool(2);
 
         Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 
@@ -126,14 +129,14 @@ public final class Main {
         List<Client> clients = loadClients(settings.getProperty("client_file"));
         SMTPServer smtpServer = new SMTPServer(settings);
 
-        Sender sender = new Sender(smtpServer, clients);
+        Archiver archiver = new Archiver(clients, taskQueue, settings);
+        Sender sender = new Sender(smtpServer, taskQueue);
 
         logger.info("Sender t4");
         logger.info("start processing");
 
-        threadPool.scheduleWithFixedDelay(sender, 0,
-                Long.valueOf(settings.getProperty("sleep_time")),
-                TimeUnit.SECONDS);
+        threadPool.submit(archiver);
+        threadPool.submit(sender);
     }
 
     private class ShutdownHook extends Thread {
