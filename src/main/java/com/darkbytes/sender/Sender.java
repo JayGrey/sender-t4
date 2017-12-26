@@ -1,6 +1,6 @@
 package com.darkbytes.sender;
 
-import com.darkbytes.sender.exceptions.SenderException;
+import com.darkbytes.sender.exceptions.ThreadInterruptedException;
 
 import java.io.File;
 import java.util.List;
@@ -23,19 +23,6 @@ public class Sender implements Runnable {
         this.server = server;
     }
 
-
-    public void processTasks(Server server) {
-        try {
-            while (!Thread.currentThread().isInterrupted()) {
-                Task task = taskQueue.take();
-                List<File> processedFiles = server.send(task);
-                deleteFiles(processedFiles);
-            }
-        } catch (InterruptedException e) {
-            logger.log(Level.WARNING, "Sender interrupted", e);
-        }
-    }
-
     void deleteFiles(List<File> files) {
         for (File file : files) {
             if (!file.delete()) {
@@ -47,11 +34,13 @@ public class Sender implements Runnable {
     @Override
     public void run() {
         try {
-            processTasks(server);
-        } catch (SenderException e) {
-            logger.log(Level.SEVERE, "Exception", e);
-        } catch (IllegalArgumentException e) {
-            logger.log(Level.SEVERE, "Illegal arguments", e);
+            while (!Thread.currentThread().isInterrupted()) {
+                Task task = taskQueue.take();
+                List<File> processedFiles = server.send(task);
+                deleteFiles(processedFiles);
+            }
+        } catch (InterruptedException e) {
+            throw new ThreadInterruptedException(e);
         }
     }
 }

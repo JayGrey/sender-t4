@@ -1,5 +1,7 @@
 package com.darkbytes.sender;
 
+import com.darkbytes.sender.exceptions.ThreadInterruptedException;
+
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
@@ -82,8 +84,7 @@ public class Archiver implements Runnable {
                         Long.valueOf(props.getProperty("sleep_time")));
             }
         } catch (InterruptedException e) {
-            logger.log(Level.WARNING, "Archiver interrupted", e);
+            throw new ThreadInterruptedException(e);
         }
-
     }
 }
