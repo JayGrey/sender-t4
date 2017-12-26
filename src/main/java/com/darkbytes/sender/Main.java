@@ -10,7 +10,10 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -40,6 +43,33 @@ public final class Main {
             System.out.println("Can't read log settings from configuration " +
                     "file");
         }
+    }
+
+    private void initSettings(String filename) {
+        try {
+            settings = loadSettingsFromFile(filename);
+        } catch (LoadSettingsException e) {
+            logger.log(Level.WARNING, "Error loading setting, use defaults", e);
+            settings = loadDefaultSettings(settings);
+
+        }
+    }
+
+    private void initThreads() {
+        threadPool = Executors.newCachedThreadPool(r -> {
+            Thread t = new Thread(r);
+            t.setUncaughtExceptionHandler((t1, e) -> logger.log(Level.WARNING,
+                    "exception in thread " + t1.getName(), e));
+            return t;
+        });
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.log(Level.INFO, "shutdown in progress");
+            System.out.println("shutdown in progress");
+            threadPool.shutdown();
+            logger.info("stop processing");
+            System.out.println("stop processing");
+        }));
     }
 
     Properties loadSettingsFromFile(String filename) {
@@ -112,57 +142,20 @@ public final class Main {
     private void start() {
         initLog(SENDER_LOG_SETTINGS_FILE);
 
-        threadPool = Executors.newFixedThreadPool(2, new SenderThreadFactory
-                ((t, e) -> logger.log(Level.WARNING,
-                        "exception in thread " + t.getName(), e)));
+        initSettings(SENDER_SETTINGS_FILE);
 
-        Runtime.getRuntime().addShutdownHook(new ShutdownHook());
-
-        try {
-            settings = loadSettingsFromFile(SENDER_SETTINGS_FILE);
-        } catch (LoadSettingsException e) {
-            logger.log(Level.WARNING, "Error loading setting, use defaults", e);
-            settings = loadDefaultSettings(settings);
-
-        }
+        initThreads();
 
         List<Client> clients = loadClients(settings.getProperty("client_file"));
+
         SMTPServer smtpServer = new SMTPServer(settings);
 
-        Archiver archiver = new Archiver(clients, taskQueue, settings);
-        Sender sender = new Sender(smtpServer, taskQueue);
+        threadPool.submit(new Archiver(clients, taskQueue, settings));
+        threadPool.submit(new Sender(smtpServer, taskQueue));
 
         logger.info("Sender t4");
         logger.info("start processing");
 
-        threadPool.submit(archiver);
-        threadPool.submit(sender);
-    }
 
-    private class SenderThreadFactory implements ThreadFactory {
-
-        private final Thread.UncaughtExceptionHandler handler;
-
-        public SenderThreadFactory(Thread.UncaughtExceptionHandler handler) {
-            this.handler = handler;
-        }
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r);
-            t.setUncaughtExceptionHandler(handler);
-            return t;
-        }
-    }
-
-    private class ShutdownHook extends Thread {
-        @Override
-        public void run() {
-            logger.log(Level.INFO, "shutdown in progress");
-            System.out.println("shutdown in progress");
-            threadPool.shutdown();
-            logger.info("stop processing");
-            System.out.println("stop processing");
-        }
     }
 }
