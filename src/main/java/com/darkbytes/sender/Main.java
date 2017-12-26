@@ -10,10 +10,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -115,7 +112,9 @@ public final class Main {
     private void start() {
         initLog(SENDER_LOG_SETTINGS_FILE);
 
-        threadPool = Executors.newFixedThreadPool(2);
+        threadPool = Executors.newFixedThreadPool(2, new SenderThreadFactory
+                ((t, e) -> logger.log(Level.WARNING,
+                        "exception in thread " + t.getName(), e)));
 
         Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 
@@ -126,6 +125,7 @@ public final class Main {
             settings = loadDefaultSettings(settings);
 
         }
+
         List<Client> clients = loadClients(settings.getProperty("client_file"));
         SMTPServer smtpServer = new SMTPServer(settings);
 
@@ -137,6 +137,22 @@ public final class Main {
 
         threadPool.submit(archiver);
         threadPool.submit(sender);
+    }
+
+    private class SenderThreadFactory implements ThreadFactory {
+
+        private final Thread.UncaughtExceptionHandler handler;
+
+        public SenderThreadFactory(Thread.UncaughtExceptionHandler handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r);
+            t.setUncaughtExceptionHandler(handler);
+            return t;
+        }
     }
 
     private class ShutdownHook extends Thread {
